@@ -27,6 +27,7 @@ struct process
   u32 start_exec_time;
   u32 wait;
   u32 response;
+  int first_time;
 
   /* End of "Additional fields here" */
 };
@@ -228,7 +229,11 @@ int main(int argc, char *argv[])
     printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
 
     // CALCs
-    current_process->start_exec_time = current_time;
+    if(current_process->first_time != 1) {
+      current_process->first_time = 1;
+      current_process->remain_time = current_process->burst_time;
+      current_process->start_exec_time = current_time;
+    }
 
     if(current_process->remain_time > 0){
       // CASE 1: remain time is > than quantum
