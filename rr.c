@@ -173,6 +173,20 @@ int main(int argc, char *argv[])
   u32 total_waiting_time = 0;
   u32 total_response_time = 0;
 
+  printf("Initialization values of additional fields:\n");
+    for (u32 i = 0; i < size; ++i)
+    {
+        printf("Process %u:\n", i + 1);
+        printf("  PID: %u\n", data[i].pid);
+        printf("  Arrival Time: %u\n", data[i].arrival_time);
+        printf("  Burst Time: %u\n", data[i].burst_time);
+        printf("  Remain Time: %u\n", data[i].remain);
+        printf("  End Time: %u\n", data[i].end_time);
+        printf("  Start Execution Time: %u\n", data[i].start_exec_time);
+        printf("  Wait: %u\n", data[i].wait);
+        printf("  Response: %u\n", data[i].response);
+    }
+
   /* Your code here */
   //simulate RR + update the fields in process struct
   if(quantum_length < 0)
