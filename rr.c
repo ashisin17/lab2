@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     // iterate through list list to find currect pos on arrival time!
     TAILQ_FOREACH(curr_process, &list, pointers){ // forward traversal to go top to bottom of list
       if(curr_process->arrival_time > new_process->arrival_time) { // if new process arrival time EARLIER, insert before curr process
-        TAILQ_INSERT_BEFORE(current_process, new_process, pointers);
+        TAILQ_INSERT_BEFORE(curr_process, new_process, pointers);
         break;
       }
     }
