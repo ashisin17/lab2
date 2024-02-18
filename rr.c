@@ -143,12 +143,6 @@ void init_processes(const char *path,
     (*process_data)[i].pid = next_int(&data, data_end);
     (*process_data)[i].arrival_time = next_int(&data, data_end);
     (*process_data)[i].burst_time = next_int(&data, data_end);
-    // add initialization values!
-    (*process_data)[i].remain_time = 0;
-    (*process_data)[i].end_time = 0;
-    (*process_data)[i].start_exec_time = 0;
-    (*process_data)[i].wait = 0;
-    (*process_data)[i].response = 0;
   }
 
   munmap((void *)data, size);
@@ -191,11 +185,12 @@ int main(int argc, char *argv[])
   //simulate RR + update the fields in process struct
   if(quantum_length < 0)
     return EINVAL;
+  u32 current_time = 0;
   
   // 1: insert process into list, SORTED by arrival times
-  printf("Initial state of the list:\n");
-  printf("%u\n", quantum_length);
-  printf("PID\tArrival Time\n");
+  // printf("Initial state of the list:\n");
+  // printf("%u\n", quantum_length);
+  // printf("PID\tArrival Time\n");
   
   for(u32 i = 0; i < size; i++){
     struct process* new_process = &data[i];
@@ -203,7 +198,7 @@ int main(int argc, char *argv[])
 
     // iterate through list list to find currect pos on arrival time!
     TAILQ_FOREACH(curr_process, &list, pointers){ // forward traversal to go top to bottom of list
-      printf("%u\t%u\n", curr_process->pid, curr_process->arrival_time);
+      // printf("%u\t%u\n", curr_process->pid, curr_process->arrival_time);
 
       if(curr_process->arrival_time > new_process->arrival_time) { // if new process arrival time EARLIER, insert before curr process
         TAILQ_INSERT_BEFORE(curr_process, new_process, pointers);
@@ -217,7 +212,6 @@ int main(int argc, char *argv[])
   }
 
   // 2: CURRENT TIME = start the timer
-  u32 current_time = 0;
   struct process *current_process = NULL;
 
   // 3: ROUND ROBIN SCHEDULING!
@@ -234,20 +228,18 @@ int main(int argc, char *argv[])
     printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
 
     // CALCs
-    u32 remaintime = current_process->remain_time;
-    if(current_process->start_exec_time == 0)
-      current_process->start_exec_time = current_time;
+    current_process->start_exec_time = current_time;
 
-    if(remaintime > 0){
+    if(current_process->remain_time > 0){
       // CASE 1: remain time is > than quantum
-      if(remaintime > quantum_length){
-        current_process->remain_time = remaintime - quantum_length;
+      if(current_process->remain_time > quantum_length){
+        current_process->remain_time = current_process->remain_time - quantum_length;
         current_time += quantum_length;
         current_process->end_time = current_time;
       }
       // CASE 2: remain time is <= quantum
       else {
-        current_time += remaintime;
+        current_time += current_process->remain_time;
         current_process->remain_time = 0;
         current_process->end_time = current_time;
       }
@@ -258,8 +250,8 @@ int main(int argc, char *argv[])
     current_process->response = current_process->start_exec_time - current_process->arrival_time;
 
     // print process ID, wait time, and response time
-    printf("AFTER Calc Results:\n");
-    printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
+    // printf("AFTER Calc Results:\n");
+    // printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
 
     //TOTALS
     total_waiting_time += current_process->wait;
