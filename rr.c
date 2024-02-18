@@ -23,7 +23,7 @@ struct process
   /* Additional fields here */
   // perform calc
   u32 remain_time;
-  u32 end_time; 
+  // u32 end_time; 
   u32 start_exec_time;
   u32 wait;
   u32 response;
@@ -168,105 +168,90 @@ int main(int argc, char *argv[])
   u32 total_waiting_time = 0;
   u32 total_response_time = 0;
 
-  // printf("Initialization values of additional fields:\n");
-  //   for (u32 i = 0; i < size; ++i)
-  //   {
-  //       printf("Process %u:\n", i + 1);
-  //       printf("  PID: %u\n", data[i].pid);
-  //       printf("  Arrival Time: %u\n", data[i].arrival_time);
-  //       printf("  Burst Time: %u\n", data[i].burst_time);
-  //       printf("  Remain Time: %u\n", data[i].remain_time);
-  //       printf("  End Time: %u\n", data[i].end_time);
-  //       printf("  Start Execution Time: %u\n", data[i].start_exec_time);
-  //       printf("  Wait: %u\n", data[i].wait);
-  //       printf("  Response: %u\n", data[i].response);
-  //   }
-
   /* Your code here */
   //simulate RR + update the fields in process struct
-  if(quantum_length < 0)
-    return EINVAL;
-  u32 current_time = 0;
-  
-  // 1: insert process into list, SORTED by arrival times
-  // printf("Initial state of the list:\n");
-  // printf("%u\n", quantum_length);
-  // printf("PID\tArrival Time\n");
-  
-  for(u32 i = 0; i < size; i++){
-    struct process* new_process = &data[i];
-    struct process* curr_process;
+  int finished = 0; // flag to indicate if the RR is finished
+  int current_time = 0; // curr time in the SIMULAITION
+  int quantum_time_left = quantum_length; // remaining time in quantum!
+  int max_ARRIVAL = 0; // max arrival time for ALL processes
 
-    // iterate through list list to find currect pos on arrival time!
-    TAILQ_FOREACH(curr_process, &list, pointers){ // forward traversal to go top to bottom of list
-      // printf("%u\t%u\n", curr_process->pid, curr_process->arrival_time);
+  struct process* delayed_process; // what happens if time slice expires?
+  int is_delayed = 0;
 
-      if(curr_process->arrival_time > new_process->arrival_time) { // if new process arrival time EARLIER, insert before curr process
-        TAILQ_INSERT_BEFORE(curr_process, new_process, pointers);
-        break;
-      }
+// find the max arrival time amon all the proceses
+  for(u32 i = 0; i < size; i++) {
+    if(data[i].arrival_time > max_ARRIVAL) {
+      max_ARRIVAL = data[i].arrival_time;
     }
-
-    // if new process has LATEST arrival time, insert at tail
-    if(!curr_process) // currn process = NULL or 0 if itts NOT inserted!
-      TAILQ_INSERT_TAIL(&list, new_process, pointers);
   }
 
-  // 2: CURRENT TIME = start the timer
-  struct process *current_process = NULL;
-
-  // 3: ROUND ROBIN SCHEDULING!
-  printf("Round Robin results:\n");
-  printf("PID\tWait Time\tResponse Time\n");
-  printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
-
-
-  while(!TAILQ_EMPTY(&list)){
-    // get 1st process in list
-    current_process = TAILQ_FIRST(&list);
-    // remove IT from list
-    TAILQ_REMOVE(&list, current_process, pointers);
-
-    // CALCs
-    if(current_process->first_time != 1) {
-      current_process->first_time = 1;
-      current_process->remain_time = current_process->burst_time;
-      current_process->start_exec_time = current_time;
-    }
-    printf("BEFORE Calc Results:\n");
-    printf("First time\tremain Time\tstart exec\n");
-    printf("%u\t%u\t%u\n", current_process->first_time, current_process->remain_time, current_process->start_exec_time);
-
-    if(current_process->remain_time > 0){
-      // CASE 1: remain time is > than quantum
-      if(current_process->remain_time > quantum_length){
-        current_process->remain_time = current_process->remain_time - quantum_length;
-        current_time += quantum_length;
-        current_process->end_time = current_time;
-      }
-      // CASE 2: remain time is <= quantum
-      else {
-        current_time += current_process->remain_time;
-        current_process->remain_time = 0;
-        current_process->end_time = current_time;
+  while(!finished){
+    for(u32 i = 0; i < size; i++) {
+      // only add process to list if its burst time > 0
+      if(data[i].arrival_time == current_time && data[i].burst_time > 0){
+        struct process* new_process = &data[i];
+        TAILQ_INSERT_TAIL(&list, new_process, pointers); // add new process to END of linked list
       }
     }
+    //what happens if new process arrives when the current one runnins is FINISHING? -> prioritze the new one
+    if(is_delayed) {
+      TAILQ_INSERT_TAIL(&list, delayed_process, pointers);
+      is_delayed = 0; // no longer delayed
+    }
+    if(!TAILQ_EMPTY(&list)) {
+      // pop off the TOP process
+      struct process* curr_process;
+      curr_process = TAILQ_FIRST(&list);
 
-    // response and waiting times
-    current_process->wait = current_process->end_time - current_process->arrival_time - current_process->burst_time;
-    current_process->response = current_process->start_exec_time - current_process->arrival_time;
+      // is this the first time running?
+      if(curr_process->first_time != 1) {
+        curr_process->first_time = 1;
+        curr_process->start_exec_time = current_time;
+        curr_process->remain_time = curr_process->burst_time;
+      }
 
-    // print process ID, wait time, and response time
-    printf("AFTER Calc Results:\n");
-    printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
+      curr_process->remain_time -= 1;
+      quantum_time_left -=1;
+      current_time +=1;
 
-    //TOTALS
-    total_waiting_time += current_process->wait;
-    total_response_time += current_process->response;
+      // printf("Process PID: %u\n", curr_process->pid);
+      // printf("Remaining Burst Time: %u\n", curr_process->remain_time);
+      // printf("Quantum Time Left: %d\n", quantum_time_left);
+      // printf("Current Time: %d\n", current_time);
+      // printf("\n");
 
-    // completed process moves to end of queue if STILL has some time
-    if (current_process->remain_time > 0)
-        TAILQ_INSERT_TAIL(&list, current_process, pointers);
+
+      if(curr_process->remain_time<=0){
+        total_response_time += current_process->start_exec_time - current_process->arrival_time;
+        total_waiting_time += current_process->end_time - current_process->arrival_time - current_process->burst_time;
+        TAILQ_REMOVE(&list, curr_process, pointers);
+        quantum_time_left = quantum_length;
+      }
+
+      // if time slice of process ends, move it to the back of the queue
+      if(quantum_time_left <= 0) {
+        TAILQ_REMOVE(&list, curr_process, pointers);
+        delayed_process = curr_process; // wanna prioritize the new process, so delay THIS cause time slice EXPIRED
+        is_delayed = 1;
+        quantum_time_left = quantum_length;
+      }
+    }
+    //what happens if process has burst time 0?
+    else if(current_time <= max_ARRIVAL){
+      quantum_time_left = quantum_length;
+      current_time +=1;
+    }
+
+    // queue is EMPTY so end the while!
+    else
+      finished = 1;
+    
+    // printf("Current Time: %d\n", current_time);
+    // printf("Remaining Time in Quantum: %d\n", quantum_time_left);
+    // printf("Delayed Flag: %d\n", is_delayed);
+    // printf("Finished Flag: %d\n", finished);
+    // printf("\n");
+
   }
   /* End of "Your code here" */
 
