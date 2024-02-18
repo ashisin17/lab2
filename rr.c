@@ -218,6 +218,8 @@ int main(int argc, char *argv[])
   // 3: ROUND ROBIN SCHEDULING!
   printf("Round Robin results:\n");
   printf("PID\tWait Time\tResponse Time\n");
+  printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
+
 
   while(!TAILQ_EMPTY(&list)){
     // get 1st process in list
@@ -225,15 +227,15 @@ int main(int argc, char *argv[])
     // remove IT from list
     TAILQ_REMOVE(&list, current_process, pointers);
 
-    printf("BEFORE Calc Results:\n");
-    printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
-
     // CALCs
     if(current_process->first_time != 1) {
       current_process->first_time = 1;
       current_process->remain_time = current_process->burst_time;
       current_process->start_exec_time = current_time;
     }
+    printf("BEFORE Calc Results:\n");
+    printf("First time\tremain Time\tstart exec\n");
+    printf("%u\t%u\t%u\n", current_process->first_time, current_process->remain_time, current_process->start_exec_time);
 
     if(current_process->remain_time > 0){
       // CASE 1: remain time is > than quantum
@@ -255,8 +257,8 @@ int main(int argc, char *argv[])
     current_process->response = current_process->start_exec_time - current_process->arrival_time;
 
     // print process ID, wait time, and response time
-    // printf("AFTER Calc Results:\n");
-    // printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
+    printf("AFTER Calc Results:\n");
+    printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
 
     //TOTALS
     total_waiting_time += current_process->wait;
