@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
   
   // 1: insert process into list, SORTED by arrival times
   printf("Initial state of the list:\n");
-  printf(quantum_length);
+  printf("%u\n", quantum_length);
   printf("PID\tArrival Time\n");
   
   for(u32 i = 0; i < size; i++){
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 
     // iterate through list list to find currect pos on arrival time!
     TAILQ_FOREACH(curr_process, &list, pointers){ // forward traversal to go top to bottom of list
-      printf("%u\t%u\n", p->pid, p->arrival_time);
+      printf("%u\t%u\n", curr_process->pid, curr_process->arrival_time);
 
       if(curr_process->arrival_time > new_process->arrival_time) { // if new process arrival time EARLIER, insert before curr process
         TAILQ_INSERT_BEFORE(curr_process, new_process, pointers);
