@@ -21,10 +21,18 @@ struct process
   TAILQ_ENTRY(process) pointers;
 
   /* Additional fields here */
+  // perform calc
+  u32 remain_time;
+  u32 end_time; 
+  u32 start_exec_time;
+  u32 wait;
+  u32 response;
+
   /* End of "Additional fields here" */
 };
 
-TAILQ_HEAD(process_list, process);
+TAILQ_HEAD(process_list, process); // initialize linked list
+// this struct acts as the head of the linked list
 
 u32 next_int(const char **data, const char *data_end)
 {
@@ -148,19 +156,83 @@ int main(int argc, char *argv[])
     return EINVAL;
   }
   struct process *data;
-  u32 size;
+  u32 size; // NUM of processes!
   init_processes(argv[1], &data, &size);
 
   u32 quantum_length = next_int_from_c_str(argv[2]);
 
   struct process_list list;
-  TAILQ_INIT(&list);
+  TAILQ_INIT(&list); // inititalize queue/linked list
 
   u32 total_waiting_time = 0;
   u32 total_response_time = 0;
 
   /* Your code here */
-  
+  //simulate RR + update the fields in process struct
+  if(quantum_length < 0)
+    return EINVAL;
+
+  // 1: insert process into list, SORTED by arrival times
+  for(u32 i = 0; i < size; i++){
+    struct process* new_process = &data[i];
+    struct process* curr_process;
+
+    // iterate through list list to find currect pos on arrival time!
+    TAILQ_FOREACH(curr_process, &list, pointers){ // forward traversal to go top to bottom of list
+      if(curr_process->arrival_time > new_process->arrival_time) { // if new process arrival time EARLIER, insert before curr process
+        TAILQ_INSERT_BEFORE(current_process, new_process, pointers);
+        break;
+      }
+    }
+
+    // if new process has LATEST arrival time, insert at tail
+    if(!curr_process) // currn process = NULL or 0 if itts NOT inserted!
+      TAILQ_INSERT_TAIL(&list, new_process, pointers);
+  }
+
+  // 2: CURRENT TIME = start the timer
+  u32 current_time = 0;
+  struct process *current_process = NULL;
+
+  // 3: ROUND ROBIN SCHEDULING!
+  while(!TAILQ_EMPTY(&list)){
+    // get 1st process in list
+    current_process = TAILQ_FIRST(&list);
+    // remove IT from list
+    TAILQ_REMOVE(&list, current_process, pointers);
+
+    // CALCs
+    u32 remaintime = current_process->remain_time;
+    if(current_process->start_exec_time == 0)
+      current_process->start_exec_time = current_time;
+
+    if(remaintime > 0){
+      // CASE 1: remain time is > than quantum
+      if(remaintime > quantum_length){
+        current_process->remain_time = remaintime - quantum_length;
+        current_time += quantum_length;
+        current_process->end_time = current_time;
+      }
+      // CASE 2: remain time is <= quantum
+      else {
+        current_time += remaintime;
+        current_process->remain_time = 0;
+        current_process->end_time = current_time;
+      }
+    }
+
+    // response and waiting times
+    current_process->wait = current_process->end_time - current_process->arrival_time - current_process->burst_time;
+    current_process->response = current_process->start_exec_time - current_process->arrival_time;
+
+    //TOTALS
+    total_waiting_time += current_process->wait;
+    total_response_time += current_process->response;
+
+    // completed process moves to end of queue if STILL has some time
+    if (current_process->remain_time > 0)
+        TAILQ_INSERT_TAIL(&list, current_process, pointers);
+  }
   /* End of "Your code here" */
 
   printf("Average waiting time: %.2f\n", (float)total_waiting_time / (float)size);

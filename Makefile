@@ -9,6 +9,11 @@ endif
 all: rr
 
 rr: rr.o
+    $(CC) -o $@ $^ $(LDFLAGS)
+
+rr.o: rr.c
+    $(CC) $(CFLAGS) -c -o $@ $<
+
 
 .PHONY: clean
 clean:
