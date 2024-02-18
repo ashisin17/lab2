@@ -225,6 +225,9 @@ int main(int argc, char *argv[])
     current_process->wait = current_process->end_time - current_process->arrival_time - current_process->burst_time;
     current_process->response = current_process->start_exec_time - current_process->arrival_time;
 
+    // print process ID, wait time, and response time
+    printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
+
     //TOTALS
     total_waiting_time += current_process->wait;
     total_response_time += current_process->response;
