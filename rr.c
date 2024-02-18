@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
         printf("  PID: %u\n", data[i].pid);
         printf("  Arrival Time: %u\n", data[i].arrival_time);
         printf("  Burst Time: %u\n", data[i].burst_time);
-        printf("  Remain Time: %u\n", data[i].remain);
+        printf("  Remain Time: %u\n", data[i].remain_time);
         printf("  End Time: %u\n", data[i].end_time);
         printf("  Start Execution Time: %u\n", data[i].start_exec_time);
         printf("  Wait: %u\n", data[i].wait);
