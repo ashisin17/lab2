@@ -173,32 +173,38 @@ int main(int argc, char *argv[])
   u32 total_waiting_time = 0;
   u32 total_response_time = 0;
 
-  printf("Initialization values of additional fields:\n");
-    for (u32 i = 0; i < size; ++i)
-    {
-        printf("Process %u:\n", i + 1);
-        printf("  PID: %u\n", data[i].pid);
-        printf("  Arrival Time: %u\n", data[i].arrival_time);
-        printf("  Burst Time: %u\n", data[i].burst_time);
-        printf("  Remain Time: %u\n", data[i].remain_time);
-        printf("  End Time: %u\n", data[i].end_time);
-        printf("  Start Execution Time: %u\n", data[i].start_exec_time);
-        printf("  Wait: %u\n", data[i].wait);
-        printf("  Response: %u\n", data[i].response);
-    }
+  // printf("Initialization values of additional fields:\n");
+  //   for (u32 i = 0; i < size; ++i)
+  //   {
+  //       printf("Process %u:\n", i + 1);
+  //       printf("  PID: %u\n", data[i].pid);
+  //       printf("  Arrival Time: %u\n", data[i].arrival_time);
+  //       printf("  Burst Time: %u\n", data[i].burst_time);
+  //       printf("  Remain Time: %u\n", data[i].remain_time);
+  //       printf("  End Time: %u\n", data[i].end_time);
+  //       printf("  Start Execution Time: %u\n", data[i].start_exec_time);
+  //       printf("  Wait: %u\n", data[i].wait);
+  //       printf("  Response: %u\n", data[i].response);
+  //   }
 
   /* Your code here */
   //simulate RR + update the fields in process struct
   if(quantum_length < 0)
     return EINVAL;
-
+  
   // 1: insert process into list, SORTED by arrival times
+  printf("Initial state of the list:\n");
+  printf(quantum_length);
+  printf("PID\tArrival Time\n");
+  
   for(u32 i = 0; i < size; i++){
     struct process* new_process = &data[i];
     struct process* curr_process;
 
     // iterate through list list to find currect pos on arrival time!
     TAILQ_FOREACH(curr_process, &list, pointers){ // forward traversal to go top to bottom of list
+      printf("%u\t%u\n", p->pid, p->arrival_time);
+
       if(curr_process->arrival_time > new_process->arrival_time) { // if new process arrival time EARLIER, insert before curr process
         TAILQ_INSERT_BEFORE(curr_process, new_process, pointers);
         break;
@@ -215,11 +221,17 @@ int main(int argc, char *argv[])
   struct process *current_process = NULL;
 
   // 3: ROUND ROBIN SCHEDULING!
+  printf("Round Robin results:\n");
+  printf("PID\tWait Time\tResponse Time\n");
+
   while(!TAILQ_EMPTY(&list)){
     // get 1st process in list
     current_process = TAILQ_FIRST(&list);
     // remove IT from list
     TAILQ_REMOVE(&list, current_process, pointers);
+
+    printf("BEFORE Calc Results:\n");
+    printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
 
     // CALCs
     u32 remaintime = current_process->remain_time;
@@ -246,6 +258,7 @@ int main(int argc, char *argv[])
     current_process->response = current_process->start_exec_time - current_process->arrival_time;
 
     // print process ID, wait time, and response time
+    printf("AFTER Calc Results:\n");
     printf("%u\t%u\t%u\n", current_process->pid, current_process->wait, current_process->response);
 
     //TOTALS
