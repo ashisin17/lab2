@@ -222,8 +222,8 @@ int main(int argc, char *argv[])
 
 
       if(curr_process->remain_time<=0){
-        total_response_time += current_process->start_exec_time - current_process->arrival_time;
-        total_waiting_time += current_process->end_time - current_process->arrival_time - current_process->burst_time;
+        total_response_time += curr_process->start_exec_time - curr_process->arrival_time;
+        total_waiting_time += curr_process->end_time - curr_process->arrival_time - curr_process->burst_time;
         TAILQ_REMOVE(&list, curr_process, pointers);
         quantum_time_left = quantum_length;
       }
