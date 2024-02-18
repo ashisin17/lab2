@@ -143,6 +143,12 @@ void init_processes(const char *path,
     (*process_data)[i].pid = next_int(&data, data_end);
     (*process_data)[i].arrival_time = next_int(&data, data_end);
     (*process_data)[i].burst_time = next_int(&data, data_end);
+    // add initialization values!
+    (*process_data)[i].remain = 0;
+    (*process_data)[i].end_time = 0;
+    (*process_data)[i].start_exec_time = 0;
+    (*process_data)[i].wait = 0;
+    (*process_data)[i].response = 0;
   }
 
   munmap((void *)data, size);
