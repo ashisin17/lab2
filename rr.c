@@ -169,16 +169,16 @@ int main(int argc, char *argv[])
   u32 total_response_time = 0;
 
   /* Your code here */
+  // all the defined variables!
   //simulate RR + update the fields in process struct
   int finished = 0; // flag to indicate if the RR is finished
   int current_time = 0; // curr time in the SIMULAITION
   int quantum_time_left = quantum_length; // remaining time in quantum!
   int max_ARRIVAL = 0; // max arrival time for ALL processes
-
   struct process* delayed_process; // what happens if time slice expires?
   int is_delayed = 0;
 
-// find the max arrival time amon all the proceses
+// find the max arrival time among all the proceses
   for(u32 i = 0; i < size; i++) {
     if(data[i].arrival_time > max_ARRIVAL) {
       max_ARRIVAL = data[i].arrival_time;
@@ -198,6 +198,7 @@ int main(int argc, char *argv[])
       TAILQ_INSERT_TAIL(&list, delayed_process, pointers);
       is_delayed = 0; // no longer delayed
     }
+    
     if(!TAILQ_EMPTY(&list)) {
       // pop off the TOP process
       struct process* curr_process;
